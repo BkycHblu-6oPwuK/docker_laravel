@@ -24,10 +24,25 @@ services:
       - ./laravel:/var/www/laravel
     ports:
       - "9000:9000"
+      - "6001:6001"
     depends_on:
       - db
     user: 1000:1000
     container_name: laravel_app
+    networks:
+      - laravel
+  db:
+    image: mysql:8.0
+    restart: always
+    volumes:
+      - ./tmp/db:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: laravel_websoket
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - 8102:3306
+    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    container_name: laravel_db
     networks:
       - laravel
   
@@ -46,15 +61,14 @@ services:
       - laravel
 
   composer:
-    build: 
-      context: .
-      dockerfile: _docker/composer/Dockerfile
+    image: composer:latest
     volumes:
       - ./laravel:/var/www/laravel
     depends_on:
       - app
     container_name: composer
     entrypoint: ['composer']
+    working_dir: "/var/www/laravel/"
     networks:
       - laravel
 
@@ -68,21 +82,7 @@ services:
     entrypoint: ['php', 'artisan']
     depends_on:
       - db
-    networks:
-      - laravel
-
-  db:
-    image: mysql:8.0
-    restart: always
-    volumes:
-      - ./tmp/db:/var/lib/mysql
-    environment:
-      MYSQL_DATABASE: laravel_inertia
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - 8102:3306
-    command: mysqld --character-set-server=utf8 --collation-server=utf8_unicode_ci
-    container_name: laravel_db
+    user: 1000:1000
     networks:
       - laravel
 
